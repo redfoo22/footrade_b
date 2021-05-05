@@ -79,6 +79,7 @@ class Hedge():
         self.entry_price = 0
         self.exit_price = 0
         self.running_profit = 0
+        #git
         
         self.TRADES_dict= {"ID":1,"entry_date":datetime.datetime.now(),"exit_date":None,"entry_price":0,"exit_price":0,"shares":0,"symbol":"DOGEUSDT","tp":0,"long":0,"open":0,"closed":0,"profit":0}
 
