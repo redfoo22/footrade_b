@@ -1,0 +1,168 @@
+TODOS
+[] create log file
+[-] Historical back testing
+[] Test shorting concept
+[] charting
+[] web interface
+[] start working in percentages
+[x] fix EMAS
+[] create mean reversion strat
+[x] text alerts and email
+
+
+[] mean reversion trailstop ENTRY!!!!
+
+
+
+
+
+"3102796480@tmomail.net"
+
+"3235594184@vtext.com"
+
+
+
+email_Text(alex_email,f'{vers} Bot Running',f'To The Moon')
+email_Text(foo_email,f'{vers} Bot Running',f'To The Moon')
+
+
+tick entry panic
+
+if STATE["live"] == 0 and STATE["long"] ==0:
+                if tick_open > tick_price: #red bar
+                    diff = tick_open - tick_price
+                    if diff  >= .001:
+                        print( f'Panic Tick {diff} position: {STATE["live"]}/{STATE["long"]}')
+                        email_Text(alex_email,f'Panic Tick {diff}',f'position: {STATE["live"]}/{STATE["long"]}')
+                        BUY_MARKET()
+
+
+
+
+
+-add short state,copy short and short_close
+
+
+
+
+
+for i in range(len(self.trades_updated)-1,-1,-1):
+                if trade["ID"] == self.trades_updated[i]["ID"] and self.trades_updated[i]["closed"] ==1:
+                    return
+
+                else:
+                    if trade["ID"] == self.trades_updated[i]["ID"] and self.trades_updated[i]["open"] ==1 and self.trades_updated[i]["long"] ==1:
+                        order = client.order_market_sell(
+                        symbol=trade["symbol"],
+                        quantity=trade["shares"])
+                        print(order)
+
+
+                        for obj in order["fills"]:
+                            
+                            self.trade_exit_prices.append(float(obj["price"]))
+                            # print(f'last trade entry price {trade_entry_prices[-1]}')
+                        # if len(trade_entry_prices) > 1:
+                        #     avg_trade_exit_price = sum(trade_entry_prices) / len(trade_entry_prices)
+                        # else:
+                        self.exit_price = self.trade_exit_prices[-1]
+
+                        profit = self.exit_price - trade["entry_price"]
+                    
+                        self.running_profit += profit
+
+                    #states
+                        self.trades_updated[i]["open"] = 0
+                        
+                        self.trades_updated[i]["closed"] = 1
+
+
+                        self.trades_updated[i]["exit_price"] = self.exit_price
+                        self.trades_updated[i]["exit_date"] = datetime.datetime.now()
+                        self.trades_updated[i]["profit"] = profit
+
+                        row_in_mem = self.trades_updated[i]
+                        self.write_list_to_file("hedge_TRADES.txt",row_in_mem)
+
+                        print(f'SELLlll ID: {self.trades_updated[i]["ID"]} exit date: {self.trades_updated[i]["exit_date"]} exit_price: {self.trades_updated[i]["exit_price"]} entry_price: {self.trades_updated[i]["entry_price"]} profit {self.trades_updated[i]["profit"]} Running Profit: {self.running_profit}')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+candle closed at 0.25120900
+EMA3 first value is 0.25027293307541637
+EMA8 first value is 0.2502395912374952
+date: 2021-04-15 23:59:00 close: 0.251209 EMA3: 0.25027293307541637 EMA8: 0.2502395912374952 open: 0.2515986 high: 0.2523234 low:0.2504591 volume: 10311659.0
+{'symbol': 'DOGEUSDT', 'orderId': 29629883, 'orderListId': -1, 'clientOrderId': 'vlGpjRuAAwcjcFepDEaMnO', 'transactTime': 1618556340293, 'price': '0.00000000', 'origQty': '10000.00000000', 'executedQty': '10000.00000000', 'cummulativeQuoteQty': '2519.96170520', 'status': 'FILLED', 'timeInForce': 'GTC', 'type': 'MARKET', 'side': 'BUY', 'fills': [{'price': '0.25184580', 'qty': '8297.00000000', 'commission': '8.29700000', 'commissionAsset': 'DOGE', 'tradeId': 1171862}, {'price': '0.25209300', 'qty': '210.00000000', 'commission': '0.21000000', 'commissionAsset': 'DOGE', 'tradeId': 1171863}, {'price': '0.25281820', 'qty': '1493.00000000', 'commission': '1.49300000', 'commissionAsset': 'DOGE', 'tradeId': 1171864}]}
+0.25155420
+0.25181100
+0.25197960
+0.25206230
+0.25219620
+0.25232030
+0.25227660
+0.25215260
+0.25169820
+0.25107180
+0.25107170
+0.25133920
+0.25144440
+0.25166280
+0.25168920
+0.25150710
+0.25148360
+0.25062100
+0.25050250
+0.25077080
+0.25035790
+0.25055460
+0.25064880
+0.25072080
+0.25054160
+0.25030000
+0.25053370
+0.25037540
+0.25047950
+0.25019310
+candle closed at 0.25019310
+EMA3 first value is 0.2502551923919905
+EMA8 first value is 0.2502351635005909
+date: 2021-04-16 00:00:00 close: 0.2501931 EMA3: 0.2502551923919905 EMA8: 0.2502351635005909 open: 0.2515536 high: 0.25249 low:0.2501839 volume: 10629233.0
+{'symbol': 'DOGEUSDT', 'orderId': 29630463, 'orderListId': -1, 'clientOrderId': 'HUtBMJmVGoL4ASuK7KxkA5', 'transactTime': 1618556400386, 'price': '0.00000000', 'origQty': '10000.00000000', 'executedQty': '10000.00000000', 'cummulativeQuoteQty': '2501.04082930', 'status': 'FILLED', 'timeInForce': 'GTC', 'type': 'MARKET', 'side': 'SELL', 'fills': [{'price': '0.25031230', 'qty': '135.00000000', 'commission': '0.03379216', 'commissionAsset': 'USDT', 'tradeId': 1171883}, {'price': '0.25010770', 'qty': '9088.00000000', 'commission': '2.27297878', 'commissionAsset': 'USDT', 'tradeId': 1171884}, {'price': '0.25002560', 'qty': '777.00000000', 'commission': '0.19426989', 'commissionAsset': 'USDT', 'tradeId': 1171885}]}
