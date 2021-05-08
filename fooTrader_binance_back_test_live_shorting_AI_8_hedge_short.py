@@ -73,7 +73,6 @@ class Hedge():
     def __init__(self):
         self.vers = "hedge"
         self.TRADE_SYMBOL = "DOGEUSDT"
-        
         self.trade_entry_prices = []
         self.trade_exit_prices = []
         self.entry_price = 0
@@ -92,25 +91,7 @@ class Hedge():
     
     def print_shit(self,close):
         pass
-        # idss = []
-        # counters = 0
-        # for i in range(len(self.trades_updated)):
-        #     idss.append(self.trades_updated[i]["ID"])
-        # for y in range(len(idss)):
-        #    if idss.count(self.trades_updated[y]["ID"]) ==1:
-        #        counters +=1
-        #        print("id",self.trades_updated[y]["ID"],"tp",self.trades_updated[y]["tp_price"])
-        # print(counters)
-
-
-            # print("trade id: ",trade["ID"],"occurences:",self.trades_updated.count(trade["ID"]))
-                # print(f'ID: {trade["ID"]} tp: {trade["tp_price"]}')
-                # print(f'unrealized_profits {sum(unrealaized_profits)}')
-               
-        
-
-
-        
+    
         # print(f'ID: {trade["ID"]} tp: {trade["tp_price"]} ')
         # print(f'unrealized_profits {sum(unrealaized_profits)}')
 
@@ -158,17 +139,6 @@ class Hedge():
 
             
             FILE.close()
-
-
-
-    def hedge_strat(self,close,EMA_item):
-        #SELL
-        self.sell_condition(close)
-        time.sleep(4)
-        #BUY
-        self.buy_condition(close,EMA_item)
-        
-
     def read_financials_from_file(self,name):
         name =name
 
@@ -193,9 +163,24 @@ class Hedge():
             FILE.close()
             return financials_from_file
 
-    def get_shares_to_long(self):
+    def get_shares_to_short(self):
         row = self.read_financials_from_file("financials.txt")
-        return row["longs_to_buy"]
+        return row["shorts_to_buy"]
+
+
+
+
+
+    def hedge_strat(self,close,EMA_item):
+        #SELL
+        self.short_close_condition(close)
+        print("sleeping")
+        time.sleep(4)
+        #BUY
+        self.short_condition(close,EMA_item)
+        
+
+        # 
 
 
         
@@ -211,13 +196,15 @@ class Hedge():
 
 
             
-    def buy_condition(self,close,EMA_item):
-       
+    def short_condition(self,close,EMA_item):
         
-        if close >= EMA_item:
-            self.BUY_MARKET()
+        
+        if close <= EMA_item:
+           self.SHORT()
 
-    def sell_condition(self,close):
+           
+
+    def short_close_condition(self,close):
         # self.read_list_from_file("hedge_TRADES.txt") #???
         # closed_IDs = []
         # if len(self.trades_updated) >0:
@@ -239,17 +226,17 @@ class Hedge():
                 idss.append(self.trades_updated[i]["ID"])
             for y in range(len(idss)):
                 if idss.count(self.trades_updated[y]["ID"]) ==1:
-                    only_1_IDs.append(self.trades_updated[y])
+                     only_1_IDs.append(self.trades_updated[y])
             for trade in only_1_IDs: #loop in reverse
-                        if close >= trade["entry_price"] + trade["entry_price"] *.01:
-                            self.SELL_MARKET(trade)
+                if close <= trade["entry_price"] - trade["entry_price"] *.01:
+                    self.SHORT_CLOSE(trade)
 
 
     def tp_price(self,entry_price):
-        tp_price_ = entry_price + entry_price *.01
+        tp_price_ = entry_price - entry_price *.01
         return tp_price_
 
-    def SELL_MARKET(self,trade):
+    def SHORT_CLOSE(self,trade):
         if STATE["simulation"] ==0:
             
             for i in range(len(self.trades_updated)-1,-1,-1):
@@ -257,11 +244,15 @@ class Hedge():
                     return
 
                 else:
-                    if trade["ID"] == self.trades_updated[i]["ID"] and self.trades_updated[i]["open"] ==1 and self.trades_updated[i]["long"] ==1:
-                        order = client.order_market_sell(
+                    if trade["ID"] == self.trades_updated[i]["ID"] and self.trades_updated[i]["open"] ==1 and self.trades_updated[i]["short"] ==1:
+                        
+                        order = client.order_market_buy(
                         symbol=trade["symbol"],
                         quantity=trade["shares"])
                         print(order)
+                        self.rebalancing = 1
+
+                        
 
 
                         for obj in order["fills"]:
@@ -273,7 +264,7 @@ class Hedge():
                         # else:
                         self.exit_price = self.trade_exit_prices[-1]
 
-                        profit = self.exit_price - trade["entry_price"]
+                        profit = trade["entry_price"] - self.exit_price 
                     
                         self.running_profit += profit
 
@@ -290,12 +281,7 @@ class Hedge():
                         row_in_mem = self.trades_updated[i]
                         self.write_list_to_file("hedge_TRADES.txt",row_in_mem)
 
-                        
-
-
-                        self.rebalancing = 1
-
-                        print(f'SELLlll ID: {self.trades_updated[i]["ID"]} exit date: {self.trades_updated[i]["exit_date"]} exit_price: {self.trades_updated[i]["exit_price"]} entry_price: {self.trades_updated[i]["entry_price"]} profit {self.trades_updated[i]["profit"]} Running Profit: {self.running_profit}')
+                        print(f'SHORT_CLOSEDDDD ID: {self.trades_updated[i]["ID"]} exit date: {self.trades_updated[i]["exit_date"]} exit_price: {self.trades_updated[i]["exit_price"]} entry_price: {self.trades_updated[i]["entry_price"]} profit {self.trades_updated[i]["profit"]} Running Profit: {self.running_profit}')
 
             
             #write to FOOBASE
@@ -312,57 +298,60 @@ class Hedge():
 
 
 
-    def BUY_MARKET(self):
-        # if STATE["simulation"]==1:
-           
-        #     avg_trade_entry_price = hist_bars[-1]["close"]
-
-        #     print(f'{hist_bars[-1]["date"]} BUYYYYYYYYY Entrty Price: {avg_trade_entry_price}')
-
-        #state
-        if STATE["simulation"]==0:
-
-            #self.TRADES_dict= {"ID":1,"entry_date":datetime.datetime.now(),"exit_date":None,"entry_price":0,"exit_price":0,"shares":0,"symbol":"DOGE","tp":0,"long":0,"open":0,"closed":0,"running_profit":0}
-            #self.trades = []
-            if self.rebalancing ==1:
-                self.SHARES = self.get_shares_to_long()
-                order = client.order_market_buy(
-                symbol=self.TRADE_SYMBOL,
-                quantity=self.SHARES)
-                print(order)
-
-                self.rebalancing =0
-
-            else:
-                self.SHARES = self.MIN_SHARES
-                order = client.order_market_buy(
-                symbol=self.TRADE_SYMBOL,
-                quantity=self.SHARES)
-                print(order)
-
-
-
-            for obj in order["fills"]:
+    def SHORT(self):
+        try:
+            # if STATE["simulation"]==1:
             
-                self.trade_entry_prices.append(float(obj["price"]))
-          
-            self.entry_price = self.trade_entry_prices[-1]
+            #     avg_trade_entry_price = hist_bars[-1]["close"]
 
-           
+            #     print(f'{hist_bars[-1]["date"]} BUYYYYYYYYY Entrty Price: {avg_trade_entry_price}')
 
-            #make Row
-            row = {"ID":self.add_ID(),"entry_date":datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S"),"exit_date":None,"entry_price":self.entry_price,"exit_price":0,"shares":self.SHARES,"symbol":self.TRADE_SYMBOL,"tp_price": self.tp_price(self.entry_price),"long":1,"short":0,"open":1,"closed":0,"profit":0}
+            #state
+            if STATE["simulation"]==0:
 
-            #write trade to file
-            self.write_list_to_file("hedge_TRADES.txt",row)
+                #self.TRADES_dict= {"ID":1,"entry_date":datetime.datetime.now(),"exit_date":None,"entry_price":0,"exit_price":0,"shares":0,"symbol":"DOGE","tp":0,"long":0,"open":0,"closed":0,"running_profit":0}
+                #self.trades = []
+                if self.rebalancing ==1:
+                    self.SHARES = self.get_shares_to_short()
+                    order = client.order_market_sell(
+                    symbol=self.TRADE_SYMBOL,
+                    quantity=self.SHARES)
+                    print(order)
+                    self.rebalancing = 0
+                else:
+                    self.SHARES = self.MIN_SHARES
+                    order = client.order_market_sell(
+                    symbol=self.TRADE_SYMBOL,
+                    quantity=self.SHARES)
+                    print(order)
 
-            #empty trades arry
-           
 
-            self.read_list_from_file("hedge_TRADES.txt")
+                        
 
-            print(f'BUYYYYYYY ID: {self.trades_updated[-1]["ID"]} date: {self.trades_updated[-1]["entry_date"]} Entry_price: {self.trades_updated[-1]["entry_price"]} TP: {self.trades_updated[-1]["tp_price"]}')
+                
+
+                for obj in order["fills"]:
+                
+                    self.trade_entry_prices.append(float(obj["price"]))
             
+                self.entry_price = self.trade_entry_prices[-1]
+
+            
+
+                #make Row
+                row = {"ID":self.add_ID(),"entry_date":datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S"),"exit_date":None,"entry_price":self.entry_price,"exit_price":0,"shares":self.SHARES,"symbol":self.TRADE_SYMBOL,"tp_price": self.tp_price(self.entry_price),"long":0,"short":1,"open":1,"closed":0,"profit":0}
+
+                #write trade to file
+                self.write_list_to_file("hedge_TRADES.txt",row)
+
+                #empty trades arry
+            
+
+                self.read_list_from_file("hedge_TRADES.txt")
+
+                print(f'SHORTTTTTT ID: {self.trades_updated[-1]["ID"]} date: {self.trades_updated[-1]["entry_date"]} Entry_price: {self.trades_updated[-1]["entry_price"]} TP: {self.trades_updated[-1]["tp_price"]}')
+        except Exception as e:
+            print("THERE IS AN ERROR",e)    
             
             # email_Text(f'BUYYYYYYY ID: {self.trades_updated[-1]["ID"]}  Entry_price: {self.trades_updated[-1]["entry_price"]} TP: {self.trades_updated[-1]["tp_price"]}',self.vers)
             
@@ -617,7 +606,7 @@ def SELL_MARKET():
             # else:
             avg_trade_exit_price = trade_entry_prices[-1]
             profit = avg_trade_exit_price - avg_trade_entry_price 
-            print(f' {datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")} Exit:{avg_trade_exit_price}', f'PROFIT:{profit} {vers} ')
+            print(f' {datetime.datetime.now()} Exit:{avg_trade_exit_price}', f'PROFIT:{profit} {vers} ')
             
             
             
@@ -639,9 +628,6 @@ def SELL_MARKET():
             stop_index = -1
             ai.min_tick_lows = []
             ai.max_tick_highs = []
-
-            
-           
 
             if profit > 0:
                 STATE["wins"]+=1
@@ -703,7 +689,7 @@ def SHORT():
                 # else:
                 avg_trade_entry_price = trade_entry_prices[-1]
                 STOP_LOSS = avg_trade_entry_price - CANDLES[-1]["EMA1"]
-                print(f'SHORT   {avg_trade_entry_price} @ {datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")} STATE: {STATE["live"]} , {STATE["short"]} ')
+                print(f'SHORT   {avg_trade_entry_price} @ {datetime.datetime.now()} STATE: {STATE["live"]} , {STATE["short"]} ')
                 
 
 
