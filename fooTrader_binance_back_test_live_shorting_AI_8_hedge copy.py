@@ -93,8 +93,27 @@ class Hedge():
     
     def print_shit(self,close):
         pass
+        # idss = []
+        # counters = 0
+        # for i in range(len(self.trades_updated)):
+        #     idss.append(self.trades_updated[i]["ID"])
+        # for y in range(len(idss)):
+        #    if idss.count(self.trades_updated[y]["ID"]) ==1:
+        #        counters +=1
+        #        print("id",self.trades_updated[y]["ID"],"tp",self.trades_updated[y]["tp_price"])
+        # print(counters)
+
+
+            # print("trade id: ",trade["ID"],"occurences:",self.trades_updated.count(trade["ID"]))
+                # print(f'ID: {trade["ID"]} tp: {trade["tp_price"]}')
+                # print(f'unrealized_profits {sum(unrealaized_profits)}')
+               
         
-     
+
+
+        
+        # print(f'ID: {trade["ID"]} tp: {trade["tp_price"]} ')
+        # print(f'unrealized_profits {sum(unrealaized_profits)}')
 
     def is_file_empty_3(self,file_name):
     #""" Check if file is empty by reading first character in it"""
@@ -445,7 +464,6 @@ def on_message(self,ws,message):
             if barCount > 0:
                 CANDLES.append({"date": milsToDateTime(json_message['E']), "RSI":last_rsi, "close":float(candle['c']),"open":float(candle['o']),"high":float(candle['h']),"low":float(candle['l']),"volume":float(candle["v"]),"EMA1":0,"EMA2":0,"bar_length":0,"high_EMA":0,"low_EMA":0})
                 closes.append(float(close))
-                
                 ai.set_closes(float(close))
                 EMA3_ai.set_closes(float(close))
 

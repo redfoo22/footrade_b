@@ -1,9 +1,14 @@
 import datetime
+import math
 
 def milsToDateTime(ms):
     time_in_millis = ms
     dt = datetime.datetime.fromtimestamp(time_in_millis / 1000.0)
     return dt.isoformat(' ', 'seconds')
+
+def round_down(n, decimals=0):
+    multiplier = 10 ** decimals
+    return math.floor(n * multiplier) / multiplier
 
 
 
@@ -45,3 +50,17 @@ def read_list_from_file(name,list_to_write_to):
         # add item to the list
         list_to_write_to.append(item)
     FILE.close()
+
+class Arr():
+    def __init__(self):
+        self.arr = []
+    def append(self,value):
+        self.arr.append(value)
+        return self
+    def get_arr(self):
+        return self.arr
+
+
+
+
+

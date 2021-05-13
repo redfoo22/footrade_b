@@ -205,18 +205,7 @@ class Hedge():
            
 
     def short_close_condition(self,close):
-        # self.read_list_from_file("hedge_TRADES.txt") #???
-        # closed_IDs = []
-        # if len(self.trades_updated) >0:
-        #     for i in range(len(self.trades_updated)-1,-1,-1): #loop in reverse
-        #         if self.trades_updated[i]["closed"] == 1:
-        #            closed_IDs.append(self.trades_updated[i]['ID'])
-        #     for i in range(len(self.trades_updated)-1,-1,-1):
-        #         if self.trades_updated[i]["open"]==1:
-        #             for trade in self.trades_updated:
-        #                 if trade["ID"] in closed_IDs == False:
-        #                     if close >= trade["entry_price"] + trade["entry_price"] *.01:
-        #                         self.SELL_MARKET(trade)
+        
         self.read_list_from_file("hedge_TRADES.txt") #???
         closed_IDs = []
         only_1_IDs = []
@@ -358,9 +347,7 @@ class Hedge():
 
 
 
-class ARR():
-    def __init__(self):
-        self.arr = []
+
 
 class AI():
     def __init__(self):

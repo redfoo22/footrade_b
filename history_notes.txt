@@ -1,0 +1,37 @@
+self.set_closes(float(bar[4]))
+
+            #todo
+            ai.set_closes(float(bar[4]))
+            EMA3_ai.set_closes(float(bar[4]))
+
+            # setup()
+            #Indictors
+
+            ai.set_highs(CANDLES[-1]["high"])
+            ai.set_lows(CANDLES[-1]["low"])
+
+                    #Indictors
+            high_EMA = ai.get_highs_EMA(2)
+            low_EMA = ai.get_lows_EMA(2)
+
+            if high_EMA > 0 and low_EMA > 0:
+                CANDLES[-1]["high_EMA"] = high_EMA
+                CANDLES[-1]["low_EMA"] = low_EMA
+
+
+
+            EMA1 = EMA("EMA1",closes,EMA1_WINDOW)
+            if EMA1 > 0:
+                CANDLES[-1]["EMA1"] = EMA1
+            
+            EMA2 = EMA("EMA2",closes,EMA2_WINDOW)
+            
+            if EMA2 > 0:
+                CANDLES[-1]["EMA2"] = EMA2
+            #length bar
+            if EMA1 > 0:
+                if CANDLES[-1]["close"] < CANDLES[-1]["EMA1"]: 
+                    if CANDLES[-1]["open"] > CANDLES[-1]["close"]:#redbar
+                        dfference = CANDLES[-1]["EMA1"] - CANDLES[-1]["low"]
+                        CANDLES[-1]['bar_length'] = dfference
+                        length_list.append(dfference)

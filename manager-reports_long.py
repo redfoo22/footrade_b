@@ -13,20 +13,24 @@ from indicators import *
 from hedge_long import *
 
 from hedge_short import *
+from long_ import *
 
 
 
 class Manager():
     def __init__(self):
         #setups
+
+        
+
         self.vers = "hedge"
         self.TRADE_SYMBOL = "DOGEUSDT"
         self.long_shares = 0
         self.HISTORY_INTERVAL=Client.KLINE_INTERVAL_1MINUTE
         self.TRADE_INTERVAL = "1m"
-        self.MIN_SHARES = 1000
+        self.MIN_SHARES = 5000
         self.EMA1_WINDOW = 3
-        self.tp = .005
+        self.tp = .01
 
         self.foo_email = "3102796480@tmomail.net"
         self.alex_email = "3235594184@vtext.com"
@@ -52,10 +56,17 @@ class Manager():
         self.account_start_balance = 0
         
         #bot_account
+
         self.bot_start_balance = 0
         self.bot_end_balance = 0
         self.bot_running_profit = 0
         self.bot_final_profit = 0
+
+
+        self.long = Long_()
+        self.ai = AI()
+        self.EMA3_ai = AI()
+        self.ticks =[]
 
 
 
@@ -67,8 +78,8 @@ class Manager():
         #GET and PRINT BALANCES
         self.get_current_balance(self.get_close())
 
-        self.set_financials(self.get_close())
-        self.write_finanicials_to_file("financials.txt",self.create_shares_to_open_row())
+        # self.set_financials(self.get_close())
+        # self.write_finanicials_to_file("financials.txt",self.create_shares_to_open_row())
 
     def balances(self,close_):
         free_USDT = self.get_USDT_balance("USDT")
@@ -94,6 +105,8 @@ class Manager():
         # print(f'profit since 12:57 {free_USD+free_USDT+(doge_in_USDT*close_)-28902}')
     def get_account_start_balance():
         pass
+
+
 
 
 
@@ -223,11 +236,6 @@ class Manager():
         balance = float(symbol_position["free"]) - float(symbol_position["locked"])
         return balance
 
-
-
-
-    
-    
     def get_open_short_shares(self):
         self.read_list_from_file("hedge_TRADES.txt") #???
         closed_IDs = []
@@ -286,6 +294,31 @@ class Manager():
                 return True
             else:
                 return False
+    def email_Text(self,sub,msg):
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        
+
+        email = "redfoo@partyrock.com" # the email where you sent the email
+        password = config.GMP
+        send_to_email = "redfoo@partyrock.com" # for whom
+        subject = sub
+        message = msg
+
+        msg = MIMEMultipart()
+        msg["From"] = email
+        msg["To"] = send_to_email
+        msg["Subject"] = subject
+
+        msg.attach(MIMEText(message, 'plain'))
+
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(email, password)
+        text = msg.as_string()
+        server.sendmail(email, send_to_email, text)
+        server.quit()
 
     def write_list_to_file(self,name,trade_execution):
         # places = ['Berlin', 'Cape Town', 'Sydney', 'Moscow']
@@ -337,6 +370,8 @@ class Manager():
 
     def on_message(self,ws,message):
         
+
+        
         try:    
 
             json_message = json.loads(message)
@@ -346,6 +381,23 @@ class Manager():
             tick_price = float(candle['c'])
 
             ##RT
+            self.long.set_tick(tick_price)
+
+            
+
+            self.ticks.append(tick_price)
+
+            self.long.EMA3_tick = self.EMA3_ai.get_tick_EMA(tick_price, self.EMA1_WINDOW)
+            self.long.sell_condition_tick(tick_price)
+
+            self.long.buy_tick_is_one_percent_lower(tick_price,self.CANDLES)
+
+            # self.long.buy_condition_tick(tick_price,self.long.EMA3_tick,self.ticks,self.CANDLES)
+
+            
+            # self.long.BUY_MARKET()
+            # print("tick",tick_price,"ema  tick",self.EMA3_ai.get_tick_EMA(tick_price, self.EMA1_WINDOW))
+
             
             # print(self.CANDLES[-10:-1])
             # print(f'How much Doge can I buy {self.get_USDT_balance("USDT")/close}')
@@ -353,7 +405,8 @@ class Manager():
             # full_value = self.get_USDT_balance("USDT") * close + self.get_USDT_balance("USDT") 
             # print(f'{full_value} is about FULL VALUE ')
             # print(f'half of full value in doge {(full_value/2)/self.get_USDT_balance("DOGE") }')
-
+            
+            
 
             ###BAR CLOSSES
             if is_candle_closed:
@@ -362,12 +415,26 @@ class Manager():
                 if self.barCount >= 0:
                     self.CANDLES.append({"date": milsToDateTime(json_message['E']), "close":float(candle['c']),"open":float(candle['o']),"high":float(candle['h']),"low":float(candle['l']),"volume":float(candle["v"]),"EMA1":0})
                     self.closes.append(float(close))
+                    self.ai.set_closes(float(close))
+                    self.EMA3_ai.set_closes(float(close))
+
 
                     #add EMA1
                     EMA1 = indicators.EMA("EMA3",self.closes,history.EMA1_WINDOW)
                 
                     if EMA1 > 0:
                         self.CANDLES[-1]["EMA1"] = EMA1
+                    
+                    self.ai.set_highs(CANDLES[-1]["high"])
+                    self.ai.set_lows(CANDLES[-1]["low"])
+
+                            #Indictors
+                    high_EMA = self.ai.get_highs_EMA(2)
+                    low_EMA = self.ai.get_lows_EMA(2)
+
+                    if high_EMA > 0 and low_EMA > 0:
+                        self.CANDLES[-1]["high_EMA"] = high_EMA
+                        self.CANDLES[-1]["low_EMA"] = low_EMA
                     # print("Updated BAR CANDLES and closes")
                     print(f'date: {self.CANDLES[-1]["date"]} close: {self.CANDLES[-1]["close"]} EMA1: {self.CANDLES[-1]["EMA1"]}')
 
@@ -376,17 +443,25 @@ class Manager():
                 self.update(self.CANDLES[-1]["close"])
 
                 #hedge_long
-                hedge_long = Hedge()
-                hedge_long.MIN_SHARES = self.MIN_SHARES
-                hedge_long.tp = self.tp
-                hedge_long.hedge_strat(self.CANDLES[-1]["close"],self.CANDLES[-1]["EMA1"])
-                #hedge_short
-                hedge_short = Hedge_Short()
-                hedge_short.MIN_SHARES = self.MIN_SHARES
-                hedge_short.tp = self.tp
-                hedge_short.hedge_strat_short(self.CANDLES[-1]["close"],self.CANDLES[-1]["EMA1"])
+                
+                self.long.MIN_SHARES = self.MIN_SHARES
+                self.long.set_tp(self.tp)
+                self.long.set_can_buy(1)
 
+                # self.long.sell_condition(self.CANDLES[-1]["close"])
+
+                
+                # self.long.hedge_strat(self.CANDLES[-1]["close"],self.CANDLES[-1]["EMA1"])
+                print(self.long.tp)
+                print(self.CANDLES[-1])
+                #hedge_short
+                # hedge_short = Hedge_Short()
+                # hedge_short.MIN_SHARES = self.MIN_SHARES
+                # hedge_short.tp = self.tp
+                # hedge_short.hedge_strat_short(self.CANDLES[-1]["close"],self.CANDLES[-1]["EMA1"])
+                self.get_current_balance(self.CANDLES[-1]["close"])
                 self.balances(self.CANDLES[-1]["close"])
+
 
                 print("open long shares",self.get_open_long_shares())
                 print("open short shares",self.get_open_short_shares())
@@ -429,6 +504,8 @@ class Manager():
         history.closes = []
         history.EMA1_WINDOW = 3
 
+        
+
         #locals
         CANDLES = history.get_CANDLES()
         closes = history.closes
@@ -437,13 +514,36 @@ class Manager():
 
         for i in range(len(CANDLES)):
             closes.append(CANDLES[i]["close"])
+            self.ai.closes.append(CANDLES[i]["close"])
+            self.EMA3_ai.set_closes(CANDLES[i]["close"])
+
             
             EMA1 = indicators.EMA("EMA3",closes,history.EMA1_WINDOW)
             CANDLES[i]["EMA1"] = EMA1
+
+            self.ai.set_highs(CANDLES[i]["high"])
+            self.ai.set_lows(CANDLES[i]["low"])
+
+                    #Indictors
+            high_EMA = self.ai.get_highs_EMA(2)
+            low_EMA = self.ai.get_lows_EMA(2)
+
+            if high_EMA > 0 and low_EMA > 0:
+                CANDLES[i]["high_EMA"] = high_EMA
+                CANDLES[i]["low_EMA"] = low_EMA
         
         
         CANDLES.pop(-1)
         closes.pop(-1)
+        self.ai.closes.pop(-1)
+        self.ai.max_highs.pop(-1)
+        self.ai.max_lows.pop(-1)
+        self.EMA3_ai.closes.pop(-1)
+
+        #resetting
+        self.ai.min_tick_lows = []
+        self.ai.max_tick_highs = []
+
         print("popping out bad bar success!")
         
         self.closes = closes

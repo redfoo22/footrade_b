@@ -1,13 +1,23 @@
 TODOS
-[] create log file
-[-] Historical back testing
-[] Test shorting concept
+[x] create log file
+[x] Historical back testing
+[x] Test shorting concept
 [] charting
 [] web interface
-[] start working in percentages
+[x] start working in percentages
 [x] fix EMAS
-[] create mean reversion strat
+[x] create mean reversion strat
 [x] text alerts and email
+[] lets gooooooo
+[] create 20 percent bot take profit
+[] sell all symbol
+[] stake 50 percent
+[] clear ledger
+[] rename file append dates and put in folder
+[] raspi pi server
+[] run on reboot or startup
+
+
 
 
 [] mean reversion trailstop ENTRY!!!!
